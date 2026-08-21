@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Учим английские слова</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            overscroll-behavior-y: none; 
+        }
+
+        .answer-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .answer-btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-correct {
+            background-color: #22c55e !important; 
+            color: white !important;
+            border-color: #16a34a !important; 
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-wrong {
+            background-color: #ef4444 !important; 
+            color: white !important;
+            border-color: #dc2626 !important; 
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-full flex justify-center items-center overflow-hidden text-slate-800">
+
+    <div class="w-full max-w-md h-full max-h-[900px] bg-white sm:rounded-[2rem] sm:shadow-2xl sm:h-[95vh] relative flex flex-col overflow-hidden border-slate-100 sm:border">
+        
+        <!-- ЭКРАН 1: СТАРТОВОЕ МЕНЮ -->
+        <div id="startScreen" class="absolute inset-0 z-20 bg-white flex flex-col items-center justify-center p-6 space-y-8 transition-transform duration-300">
+            <div class="text-center">
+                <div class="text-6xl mb-4">🎓</div>
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">English Words</h1>
+                <p class="text-slate-500 mt-2 font-medium">Учи слова легко и быстро</p>
+            </div>
+
+            <div class="w-full space-y-5 bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                <!-- Направление перевода -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-2">Направление:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="optDirEnRu" class="menu-btn py-3 px-2 rounded-xl border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition text-sm sm:text-base">English ➔ Русский</button>
+                        <button id="optDirRuEn" class="menu-btn py-3 px-2 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-medium transition hover:bg-slate-50 text-sm sm:text-base">Русский ➔ English</button>
+                    </div>
+                </div>
+
+                <!-- Режим игры -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-2">Режим:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="optModeStudy" class="menu-btn py-3 px-2 rounded-xl border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition text-sm sm:text-base">Изучение</button>
+                        <button id="optModeTime" class="menu-btn py-3 px-2 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-medium transition hover:bg-slate-50 text-sm sm:text-base">На время ⏱️</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold text-lg hover:bg-slate-700 transition shadow-lg active:scale-95">
+                Начать игру
+            </button>
+
+            <button id="btnShowStats" class="text-blue-600 font-semibold underline-offset-4 hover:underline py-2">
+                Посмотреть статистику
+            </button>
+        </div>
+
+        <!-- ЭКРАН 2: ИГРА -->
+        <div id="gameScreen" class="absolute inset-0 z-10 bg-white flex flex-col translate-x-full transition-transform duration-300">
+            <div class="flex justify-between items-center p-4 border-b border-slate-100 shrink-0">
+                <button id="btnBackToMenu" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                    ◀
+                </button>
+                <div class="font-bold text-slate-700 flex items-center gap-1 bg-yellow-100 px-3 py-1.5 rounded-full shadow-sm text-sm" title="Звезды за сегодня в этом режиме">
+                    ⭐ <span id="uiScore">0</span> <span class="text-xs text-slate-500 font-medium ml-1">за сегодня</span>
+                </div>
+            </div>
+
+            <div id="timerContainer" class="w-full h-1.5 bg-slate-100 hidden shrink-0">
+                <div id="timerBar" class="h-full bg-blue-500 w-full rounded-r-full transition-linear"></div>
+            </div>
+
+            <!-- Игровая зона -->
+            <div class="flex-1 flex flex-col p-4 overflow-hidden relative">
+                
+                <div class="flex-1 flex flex-col items-center justify-center w-full">
+                    <h2 id="uiQuestion" class="text-4xl sm:text-5xl font-extrabold text-center text-slate-800 mb-2 break-words w-full px-2">
+                        hello
+                    </h2>
+                    
+                    <div id="uiClickedTranslation" class="text-lg sm:text-xl text-slate-500 font-medium min-h-[32px] opacity-0 transition-opacity mb-4 text-center px-2 flex items-center justify-center gap-2">
+                        <span id="transText"></span>
+                    </div>
+                    
+                    <button id="btnPlaySound" class="w-16 h-16 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full flex items-center justify-center text-3xl transition-transform transform active:scale-90 shadow-inner mt-2">
+                        🔊
+                    </button>
+                </div>
+
+                <div id="uiAnswers" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full shrink-0 pb-4">
+                </div>
+
+                <div class="h-20 w-full shrink-0 flex items-end">
+                    <button id="btnNextWord" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold text-lg hover:bg-slate-700 transition shadow-lg active:scale-95 hidden">
+                        Следующее слово ➔
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 3: СТАТИСТИКА -->
+        <div id="statsScreen" class="absolute inset-0 z-30 bg-white flex flex-col p-6 translate-x-full transition-transform duration-300">
+            <div class="flex items-center mb-4 shrink-0">
+                <button id="btnBackFromStats" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition mr-4">
+                    ◀
+                </button>
+                <h2 class="text-2xl font-extrabold text-slate-800">Статистика</h2>
+            </div>
+
+            <!-- Переключатель направления в статистике -->
+            <div class="flex justify-center mb-2 shrink-0 w-full">
+                <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 w-full max-w-[300px]">
+                    <button id="statDirEnRu" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-white shadow-sm text-slate-800 transition">English ➔ Русский</button>
+                    <button id="statDirRuEn" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition">Русский ➔ English</button>
+                </div>
+            </div>
+
+            <!-- Переключатель режимов в статистике -->
+            <div class="flex justify-center mb-6 shrink-0 w-full">
+                <div class="bg-slate-100 p-1.5 rounded-xl flex gap-1 w-full max-w-[300px]">
+                    <button id="statToggleStudy" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-white shadow-sm text-slate-800 transition">Изучение</button>
+                    <button id="statToggleTime" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition">На время</button>
+                </div>
+            </div>
+
+            <div class="mb-6 shrink-0 w-full flex justify-center">
+                <div class="bg-blue-50 rounded-2xl p-4 sm:p-5 border border-blue-100 flex flex-col items-center justify-center w-full shadow-sm">
+                    <div class="text-4xl font-black text-blue-600" id="statTotalWords">0</div>
+                    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mt-2 text-center leading-tight">Пройдено слов всего<br>(в этом режиме)</div>
+                </div>
+            </div>
+
+            <!-- График активности -->
+            <div class="mb-6 w-full shrink-0">
+                <div class="flex justify-between items-center mb-3">
+                    <button id="btnChartPrev" class="text-slate-400 hover:text-slate-700 px-2 py-1 rounded bg-slate-50 hover:bg-slate-100 transition">◀</button>
+                    <h3 class="font-bold text-slate-700 text-sm text-center" id="chartDateLabel">За последние 7 дней</h3>
+                    <button id="btnChartNext" class="text-slate-400 hover:text-slate-700 px-2 py-1 rounded bg-slate-50 hover:bg-slate-100 transition opacity-50 cursor-not-allowed">▶</button>
+                </div>
+                
+                <div class="flex items-end justify-between h-32 gap-0.5 sm:gap-1 bg-slate-50 rounded-2xl p-4 border border-slate-100" id="chartContainer">
+                    <!-- Столбики графика добавляются скриптом -->
+                </div>
+                <div class="flex justify-center gap-4 mt-2">
+                    <div class="flex items-center gap-1 text-[10px] text-slate-500 font-medium"><div class="w-3 h-3 rounded bg-green-400"></div> Правильно</div>
+                    <div class="flex items-center gap-1 text-[10px] text-slate-500 font-medium"><div class="w-3 h-3 rounded bg-red-400"></div> Ошибки</div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <h3 class="font-bold text-slate-700 mb-3 text-sm">Слова для повторения:</h3>
+                <ul id="mistakesList" class="space-y-2 text-sm">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawWordsData = `
+hello - здравствуйте, привет
+sorry - извини(те)
+please - пожалуйста (прошу); угождать
+thank you - спасибо
+you are welcome - пожалуйста, не за что
+goodbye - до свидания
+people - люди
+man - мужчина
+men - мужчины
+woman - женщина
+women - женщины
+child - ребенок
+children - дети
+boy - мальчик
+girl - девочка
+friend - друг
+guest - гость
+family - семья
+parents - родители
+father - отец
+mother - мать
+husband - муж
+wife - жена
+son - сын
+daughter - дочь
+brother - брат
+sister - сестра
+grandfather - дед
+job - работа
+teacher - учитель
+driver - водитель
+worker - рабочий
+engineer - инженер
+doctor - врач
+nurse - медсестра
+shop assistant - продавец
+waiter - официант
+student - студент, школьник
+animal - животное
+cat - кошка
+dog - собака
+bird - птица
+country - страна; сельская местность
+Russia - Россия
+England - Англия
+city - город
+house - дом (здание)
+home - дом (место проживания)
+building - здание; строительство
+place - место; помещать
+centre - центр
+school - школа
+theater - театр
+church - церковь
+restaurant - ресторан
+hotel - гостиница
+cinema - кинотеатр
+hospital - больница
+post office - почта
+station - станция, вокзал
+shop - магазин
+factory - предприятие, завод, фабрика
+square - площадь
+street - улица
+road - дорога
+stop - остановка; останавливаться
+garden - сад
+river - река
+mountain - гора
+tree - дерево
+flat - квартира
+room - комната
+living room - зал
+bedroom - спальня
+bathroom - ванная
+shower - душ
+kitchen - кухня
+hall - коридор
+balcony - балкон
+floor - пол; этаж
+wall - стена
+door - дверь
+window - окно
+furniture - мебель
+table - стол
+chair - стул
+armchair - кресло
+sofa - диван
+bed - кровать
+wardrobe - (платяной) шкаф
+shelf - полка
+mirror - зеркало
+carpet - ковер
+fridge - холодильник
+food - еда
+bread - хлеб
+butter - масло
+cheese - сыр
+sausage - колбаса, сосиска
+meat - мясо
+chicken - цыпленок; курица
+fish - рыба; рыбачить
+egg - яйцо
+salad - салат
+mushroom - гриб
+corn - кукуруза; зерно
+porridge - каша
+soup - суп
+sandwich - бутерброд
+rice - рис
+pepper - перец; поперчить
+salt - соль; посолить
+onion - лук (репчатый)
+vegetables - овощи
+potatoes - картофель
+carrot - морковь
+tomato - помидор
+cucumber - огурец
+cabbage - капуста
+nut - орех
+fruit - фрукт(ы); плод
+apple - яблоко
+banana - банан
+berry - ягода
+grape - виноград
+orange - апельсин; оранжевый
+lemon - лимон
+sugar - сахар
+honey - мёд
+jam - варенье
+cake - торт, пирожное
+bun - булочка
+cookie - печенье
+pie - пирог, пирожок
+sweet - конфета; сладкий
+ice-cream - мороженое
+chocolate - шоколад
+water - вода; поливать
+soda - газировка
+juice - сок
+tea - чай
+coffee - кофе
+milk - молоко
+cup - чашка
+glass - стакан; стекло
+plate - тарелка
+spoon - ложка
+fork - вилка
+knife - нож
+saucer - блюдце
+bottle - бутылка
+napkin - салфетка
+breakfast - завтрак
+lunch - обед
+dinner - ужин
+plane - самолет
+car - автомобиль
+tram - трамвай
+bus - автобус
+train - поезд
+ship - корабль
+bicycle - велосипед
+time - время; раз
+minute - минута
+hour - час
+week - неделя
+year - год
+holiday - праздник; отпуск; каникулы
+party - вечеринка
+yesterday - вчера
+today - сегодня
+tomorrow - завтра
+day - день
+morning - утро
+afternoon - день (после полудня)
+evening - вечер
+night - ночь
+Monday - понедельник
+Tuesday - вторник
+Wednesday - среда
+Thursday - четверг
+Friday - пятница
+Saturday - суббота
+Sunday - воскресенье
+month - месяц
+January - январь
+February - февраль
+March - март
+April - апрель
+May - май
+June - июнь
+July - июль
+August - август
+September - сентябрь
+October - октябрь
+November - ноябрь
+December - декабрь
+spring - весна
+summer - лето
+autumn - осень
+winter - зима
+name - имя, фамилия; название; называть
+birthday - день рождения
+address - адрес
+married - женатый/замужняя
+thing - вещь
+pen - ручка
+pencil - карандаш
+book - книга
+copybook - тетрадь
+letter - письмо; буква
+paper - бумага
+phone - телефон; разговаривать по телефону
+clock - часы
+comb - расчёска; расчесывать
+TV - телевизор
+iron - утюг; железо; гладить (утюгом)
+flower - цветок
+soap - мыло; намыливать
+bag - сумка
+present - подарок
+ball - мяч
+toy - игрушка
+ticket - билет
+key - ключ; клавиша
+lamp - лампа
+glasses - очки
+towel - полотенце
+box - коробка, ящик; боксировать
+clothes - одежда
+shoes - обувь
+coat - пальто
+dress - платье; одевать(ся)
+suit - костюм; иск; подходить, быть к лицу, соответствовать
+shirt - рубашка
+blouse - блузка
+skirt - юбка
+glove - перчатка
+hat - шляпа; шапка
+cap - кепка; колпачок
+jacket - пиджак; куртка
+scarf - шарф
+sock - носок
+sweater - свитер
+T-shirt - футболка
+tie - галстук; привязывать
+trousers - брюки, штаны
+shorts - шорты
+weather - погода
+sun - солнце
+wind - ветер
+rain - дождь
+snow - снег
+sky - небо
+music - музыка
+song - песня
+picture - картина; фотография
+money - деньги
+bill - счёт
+love - любовь; любить
+hate - ненависть; ненавидеть
+luck - удача
+problem - проблема
+question - вопрос
+what - что; какой
+who - кто
+where - где; куда
+how - как
+why - почему, зачем
+when - когда
+how many - сколько
+how much - сколько
+I - я
+you - ты; вы; Вы
+he - он
+she - она;
+it - оно
+we - мы
+they - они
+my - мой
+your - твой; ваш
+his - его
+her - её
+its - его
+our - наш
+their - их
+from - из
+of - передает род. падеж
+to - к; в
+in - в
+on - на
+under - под
+with - с
+without - без
+near - возле, около; близко
+for - для; в течение; на
+about - о; около, приблизительно
+number - число; количество; номер
+zero - ноль
+one - один
+two - два
+three - три
+four - четыре
+five - пять
+six - шесть
+seven - семь
+eight - восемь
+nine - девять
+ten - десять
+eleven - одиннадцать
+twelve - двенадцать
+thirteen - тринадцать
+fourteen - четырнадцать
+fifteen - пятнадцать
+sixteen - шестнадцать
+seventeen - семнадцать
+eighteen - восемнадцать
+nineteen - девятнадцать
+twenty - двадцать
+thirty - тридцать
+forty - сорок
+fifty - пятьдесят
+sixty - шестьдесят
+seventy - семьдесят
+eighty - восемьдесят
+ninety - девяносто
+hundred - сто
+thousand - тысяча
+colour - цвет
+black - чёрный
+blue - голубой; синий
+brown - коричневый
+green - зелёный
+grey - серый
+red - красный
+white - белый
+yellow - жёлтый
+pink - розовый
+old - старый
+young - молодой
+new - новый
+big - большой
+small - маленький
+hungry - голодный
+good - хороший; добрый
+bad - плохой
+early - ранний; рано
+late - поздний; поздно
+last - последний, прошлый
+next - следующий
+free - свободный; бесплатный
+busy - занятый
+hot - жаркий; горячий; острый; жарко; горячо
+warm - тёплый; тепло
+cold - холодный; холодно; холод; простуда
+stupid - глупый, тупой
+clever - умный
+nice - красивый, хороший, приятный
+beautiful - красивый
+high - высокий
+tall - высокий
+short - короткий; низкий
+long - длинный; долгий
+heavy - тяжёлый
+light - лёгкий; светлый; свет
+difficult - трудный, тяжелый
+easy - легкий, нетрудный
+dark - тёмный
+expensive - дорогой
+cheap - дешёвый
+poor - бедный; плохой
+rich - богатый
+healthy - здоровый
+sick - больной
+left - левый; cлева; налево
+right - правый; правильный; справа; направо; право; прямо
+wrong - неправильный
+fast - быстрый, быстро
+slow - медленный
+sad - печальный
+glad - радостный
+happy - счастливый
+angry - сердитый
+clean - чистый; чистить, прибираться
+dirty - грязный
+tired - усталый
+comfortable - удобный, комфортабельный, уютный
+tasty - вкусный
+ready - готовый
+careful - внимательный; осторожный
+sometimes - иногда
+never - никогда
+rarely - редко
+usually - обычно
+often - часто
+always - всегда
+soon - скоро
+well - хорошо; колодец
+yes - да
+no - нет
+not - не
+this - этот
+that - тот; что; который
+many - много
+much - много
+few - мало
+little - мало; маленький
+some - несколько; немного; некоторое количество
+any - несколько; немного; некоторое количество; какой-нибудь
+nobody - никто
+nothing - ничто
+here - здесь; сюда
+there - там; туда
+now - сейчас, теперь
+then - потом; тогда
+very - очень
+every - каждый
+another - другой
+all - все; всё; весь
+so - так; таким образом; итак; поэтому
+up - вверх
+down - вниз
+together - вместе
+too - тоже; слишком
+only - только
+and - и
+or - или
+but - но
+because - потому что, так как
+if - если; ли
+be - быть, являться
+do - делать
+have - иметь
+can - мочь
+go - идти; ехать; уходить; уезжать
+find - находить
+stand - стоять; стенд
+sit - сидеть
+hear - слышать
+get - получать; добираться; становиться
+make - делать
+come - приходить, приезжать
+run - бежать
+see - видеть
+write - писать
+take - брать
+give - давать; дарить
+forget - забывать
+eat - кушать
+say - сказать
+pay - платить
+drink - пить
+swim - плавать
+sing - петь
+begin - начинать
+fly - летать; муха
+know - знать
+draw - рисовать, чертить; тащить, тянуть
+speak - разговаривать
+choose - выбирать
+break - ломать
+show - показывать
+cut - резать
+put - помещать, ставить, класть
+let - позволять
+read - читать
+send - посылать
+spend - проводить; тратить
+build - строить
+feel - чувствовать
+meet - встречать
+sleep - спать
+leave - покидать; оставлять; уходить; уезжать
+buy - покупать
+bring - приносить, привозить
+teach - учить, обучать
+think - думать
+joke - шутить; шутка
+must - быть должным
+will - для образования буд. времени
+live - жить
+work - работать; работа
+watch - смотреть; наблюдать; наручные часы
+wash - мыть, cтирать
+try - пытаться, пробовать; попытка
+celebrate - праздновать
+smile - улыбаться; улыбка
+laugh - смеяться
+cry - плакать, кричать; плач, крик
+learn - учить
+change - изменять; переодеваться; изменение; сдача, мелочь
+listen - слушать
+close - закрывать
+open - открывать; открытый
+dance - танцевать
+ask - спрашивать; просить
+answer - отвечать; ответ
+want - хотеть
+like - нравиться, любить; подобно, как
+cook - варить; готовить
+wait - ждать
+play - играть; спектакль, пьеса
+call - звать; звонить
+walk - гулять; идти пешком; прогулка
+remember - запомнить; вспомнить
+stay - оставаться; останавливаться
+help - помогать; помощь
+visit - посещать; посещение, визит
+jump - прыгать; прыжок
+travel - путешествовать; путешествие
+talk - разговаривать; разговор
+surprise - удивлять; удивление; сюрприз
+worry - беспокоить; беспокойство
+        `;
+
+        // Разделяем слова, учитывая, что дефис должен быть окружен пробелами (чтобы не разбить T-shirt)
+        const words = rawWordsData.trim().split('\n').filter(line => line.includes(' - ')).map(line => {
+            const parts = line.split(/\s+-\s+/);
+            const en = parts[0].trim();
+            const ru = parts[1].trim();
+            const filename = en.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') + '.mp3';
+            return { en, ru, audio: `audio/${filename}` };
+        });
+
+        const STORAGE_KEY = 'english_game_data_v4'; // Версия с умным интервальным повторением
+        
+        let appData = {
+            direction: 'en-ru', 
+            mode: 'study', 
+            scores: { 
+                study: { 'en-ru': 0, 'ru-en': 0 }, 
+                time: { 'en-ru': 0, 'ru-en': 0 } 
+            },
+            wordsPlayed: { 
+                study: { 'en-ru': 0, 'ru-en': 0 }, 
+                time: { 'en-ru': 0, 'ru-en': 0 } 
+            },
+            mistakes: {}, // Теперь это объект: { "hello": "2026-08-21" } - дата последней ошибки
+            todayCorrect: { date: '', words: [] }, // Ошибки, исправленные СЕГОДНЯ (отложены до завтра)
+            dailyStats: {} // 'YYYY-MM-DD': { study: { 'en-ru': {s, m}, 'ru-en': {s, m} }, time: ... }
+        };
+
+        let currentWord = null;
+        let currentAnswers = [];
+        let timerId = null;
+        let isQuestionActive = false;
+        let hasMistakeThisWord = false; 
+        
+        let currentStatMode = 'study'; 
+        let currentStatDir = 'en-ru';
+        let statOffsetDays = 0; 
+        
+        let lastPlayedWordEn = null; 
+        
+        const audioPlayer = new Audio();
+
+        const screens = {
+            start: document.getElementById('startScreen'),
+            game: document.getElementById('gameScreen'),
+            stats: document.getElementById('statsScreen')
+        };
+        
+        const uiQuestion = document.getElementById('uiQuestion');
+        const uiClickedTranslation = document.getElementById('uiClickedTranslation');
+        const transText = document.getElementById('transText');
+        const uiAnswers = document.getElementById('uiAnswers');
+        const uiScore = document.getElementById('uiScore');
+        const btnNextWord = document.getElementById('btnNextWord');
+        const timerContainer = document.getElementById('timerContainer');
+        const timerBar = document.getElementById('timerBar');
+
+        function getTodayString() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function initDailyStatObj(dateStr) {
+            if (!appData.dailyStats[dateStr]) {
+                appData.dailyStats[dateStr] = { 
+                    study: { 'en-ru': { score: 0, mistakes: 0 }, 'ru-en': { score: 0, mistakes: 0 } }, 
+                    time:  { 'en-ru': { score: 0, mistakes: 0 }, 'ru-en': { score: 0, mistakes: 0 } } 
+                };
+            }
+        }
+
+        function loadSettings() {
+            try {
+                let data = localStorage.getItem(STORAGE_KEY);
+                
+                if (!data) {
+                    // Миграция со старых версий (v3)
+                    const oldV3 = localStorage.getItem('english_game_data_v3');
+                    if (oldV3) {
+                        const parsed = JSON.parse(oldV3);
+                        appData = { ...appData, ...parsed };
+                        
+                        // Если старые ошибки были в массиве, переделываем их в объект с "вчерашней" датой,
+                        // чтобы они всплыли сегодня для закрепления.
+                        if (Array.isArray(appData.mistakes)) {
+                            let newMistakes = {};
+                            let yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            let yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+                            
+                            appData.mistakes.forEach(w => {
+                                newMistakes[w] = yStr;
+                            });
+                            appData.mistakes = newMistakes;
+                        }
+                    }
+                } else {
+                    appData = { ...appData, ...JSON.parse(data) };
+                }
+                
+                // Проверяем актуальность todayCorrect
+                if (!appData.todayCorrect || appData.todayCorrect.date !== getTodayString()) {
+                    appData.todayCorrect = { date: getTodayString(), words: [] };
+                }
+                
+                initDailyStatObj(getTodayString());
+                updateMenuButtons();
+            } catch (e) { console.error("Error loading settings", e); }
+        }
+
+        function saveSettings() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function recordDailyStat(type) { 
+            const mode = appData.mode;
+            const dir = appData.direction;
+            const todayStr = getTodayString();
+            initDailyStatObj(todayStr);
+            
+            if (type === 'score') {
+                appData.scores[mode][dir]++;
+                appData.wordsPlayed[mode][dir]++;
+                appData.dailyStats[todayStr][mode][dir].score++;
+            } else if (type === 'mistakes') {
+                appData.dailyStats[todayStr][mode][dir].mistakes++;
+            }
+            saveSettings();
+        }
+
+        function updateInGameScore() {
+            const todayStr = getTodayString();
+            initDailyStatObj(todayStr);
+            uiScore.textContent = appData.dailyStats[todayStr][appData.mode][appData.direction].score;
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => {
+                s.style.transform = 'translateX(100%)';
+            });
+            if (screenName === 'start') {
+                screens.start.style.transform = 'translateX(0)';
+            } else if (screenName === 'game') {
+                screens.game.style.transform = 'translateX(0)';
+            } else if (screenName === 'stats') {
+                screens.stats.style.transform = 'translateX(0)';
+            }
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function getNextWord() {
+            // Выбираем из ошибок, исключая те, что уже правильно ответили СЕГОДНЯ, и только что сыгранное слово
+            const availableMistakes = Object.keys(appData.mistakes).filter(w => 
+                w !== lastPlayedWordEn && !appData.todayCorrect.words.includes(w)
+            );
+            
+            // С вероятностью 30% даем слово на повторение (если есть что повторять)
+            if (availableMistakes.length > 0 && Math.random() < 0.3) {
+                const mistakeEn = availableMistakes[Math.floor(Math.random() * availableMistakes.length)];
+                const word = words.find(w => w.en === mistakeEn);
+                if (word) return word;
+            }
+            
+            const availableWords = words.filter(w => w.en !== lastPlayedWordEn);
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+
+        function getAnswers(correctWord) {
+            const otherWords = words.filter(word => word.en !== correctWord.en);
+            const randomWords = shuffle(otherWords).slice(0, 3);
+            return shuffle([correctWord, ...randomWords]);
+        }
+
+        function playWordAudio(word) {
+            audioPlayer.src = word.audio;
+            audioPlayer.play().catch(e => console.log("Audio play prevented:", e));
+        }
+
+        function freezeTimer() {
+            if (appData.mode === 'time' && timerBar) {
+                const computedWidth = window.getComputedStyle(timerBar).width;
+                timerBar.style.transition = 'none';
+                timerBar.style.width = computedWidth;
+            }
+        }
+
+        function newQuestion() {
+            clearTimeout(timerId);
+            isQuestionActive = true;
+            hasMistakeThisWord = false; 
+            btnNextWord.classList.add('hidden');
+            uiAnswers.innerHTML = "";
+            uiClickedTranslation.classList.add('opacity-0');
+            
+            currentWord = getNextWord();
+            lastPlayedWordEn = currentWord.en; 
+            currentAnswers = getAnswers(currentWord);
+            
+            if (appData.direction === 'en-ru') {
+                uiQuestion.textContent = currentWord.en;
+            } else {
+                uiQuestion.textContent = currentWord.ru;
+            }
+
+            currentAnswers.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn bg-slate-50 border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl p-4 text-lg w-full text-center hover:bg-slate-100 hover:border-slate-300';
+                
+                btn.textContent = (appData.direction === 'en-ru') ? word.ru : word.en;
+                btn.onclick = () => handleAnswerClick(word, btn);
+                uiAnswers.appendChild(btn);
+            });
+
+            if (appData.mode === 'time') {
+                timerContainer.classList.remove('hidden');
+                timerBar.style.transition = 'none';
+                timerBar.style.width = '100%';
+                
+                void timerBar.offsetWidth; 
+                
+                timerBar.style.transition = 'width 5s linear';
+                timerBar.style.width = '0%';
+
+                timerId = setTimeout(() => {
+                    handleTimeout();
+                }, 5000);
+            } else {
+                timerContainer.classList.add('hidden');
+            }
+        }
+
+        function handleAnswerClick(clickedWord, btnElement) {
+            playWordAudio(clickedWord);
+            
+            transText.textContent = `${clickedWord.en} — ${clickedWord.ru}`;
+            uiClickedTranslation.classList.remove('opacity-0');
+
+            if (!isQuestionActive) return; 
+
+            const isCorrect = clickedWord.en === currentWord.en;
+            const todayStr = getTodayString();
+
+            if (isCorrect) {
+                isQuestionActive = false;
+                clearTimeout(timerId); 
+                freezeTimer();
+                
+                btnElement.classList.add('btn-correct');
+                
+                // ЛОГИКА ИНТЕРВАЛЬНОГО ПОВТОРЕНИЯ:
+                if (appData.mistakes[currentWord.en]) {
+                    if (appData.mistakes[currentWord.en] !== todayStr) {
+                        // Ошибка была сделана в прошлые дни. Ребенок ответил верно -> удаляем насовсем.
+                        delete appData.mistakes[currentWord.en];
+                    } else {
+                        // Ошибка была сделана СЕГОДНЯ. Добавляем в todayCorrect, чтобы больше не задавать СЕГОДНЯ.
+                        // Но оставляем в базе ошибок, чтобы проверить ЗАВТРА.
+                        if (!appData.todayCorrect.words.includes(currentWord.en)) {
+                            appData.todayCorrect.words.push(currentWord.en);
+                        }
+                    }
+                }
+                
+                recordDailyStat('score');
+                updateInGameScore();
+                showNextButton();
+            } else {
+                btnElement.classList.add('btn-wrong');
+                
+                if (!hasMistakeThisWord) {
+                    hasMistakeThisWord = true;
+                    recordDailyStat('mistakes');
+                    
+                    // Регистрируем ошибку сегодняшней датой
+                    appData.mistakes[currentWord.en] = todayStr;
+                    
+                    // Если вдруг слово было в todayCorrect (допустим ответил правильно, а потом на другой попытке неверно) - убираем
+                    appData.todayCorrect.words = appData.todayCorrect.words.filter(w => w !== currentWord.en);
+                    saveSettings();
+                }
+
+                if (appData.mode === 'time') {
+                    handleTimeout(); 
+                }
+            }
+        }
+
+        function handleTimeout() {
+            if (!isQuestionActive) return;
+            isQuestionActive = false;
+            clearTimeout(timerId);
+            freezeTimer();
+
+            const todayStr = getTodayString();
+
+            if (!hasMistakeThisWord) {
+                hasMistakeThisWord = true;
+                recordDailyStat('mistakes');
+                
+                appData.mistakes[currentWord.en] = todayStr;
+                appData.todayCorrect.words = appData.todayCorrect.words.filter(w => w !== currentWord.en);
+                saveSettings();
+            }
+
+            const buttons = uiAnswers.querySelectorAll('button');
+            buttons.forEach((btn, wordIndex) => {
+                if (currentAnswers[wordIndex] === currentWord) {
+                    btn.classList.add('btn-correct');
+                }
+            });
+
+            transText.textContent = `${currentWord.en} — ${currentWord.ru}`;
+            uiClickedTranslation.classList.remove('opacity-0');
+            playWordAudio(currentWord);
+            showNextButton();
+        }
+
+        function showNextButton() {
+            btnNextWord.classList.remove('hidden');
+        }
+
+        document.getElementById('btnPlaySound').onclick = () => {
+            if (currentWord) playWordAudio(currentWord);
+        };
+        
+        btnNextWord.onclick = newQuestion;
+
+        document.getElementById('btnStartGame').onclick = () => {
+            updateInGameScore();
+            showScreen('game');
+            newQuestion();
+        };
+
+        document.getElementById('btnBackToMenu').onclick = () => {
+            clearTimeout(timerId);
+            showScreen('start');
+        };
+
+        document.getElementById('btnBackFromStats').onclick = () => {
+            showScreen('start');
+        };
+
+        function renderStats() {
+            const toggleClasses = {
+                active: 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-white shadow-sm text-slate-800 transition',
+                inactive: 'flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition'
+            };
+
+            document.getElementById('statToggleStudy').className = currentStatMode === 'study' ? toggleClasses.active : toggleClasses.inactive;
+            document.getElementById('statToggleTime').className = currentStatMode === 'time' ? toggleClasses.active : toggleClasses.inactive;
+            
+            document.getElementById('statDirEnRu').className = currentStatDir === 'en-ru' ? toggleClasses.active : toggleClasses.inactive;
+            document.getElementById('statDirRuEn').className = currentStatDir === 'ru-en' ? toggleClasses.active : toggleClasses.inactive;
+
+            // Только одно главное число - история всех слов (совпадает со счетом для простоты)
+            document.getElementById('statTotalWords').textContent = appData.wordsPlayed[currentStatMode][currentStatDir] || 0;
+            
+            // Построение графика
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.innerHTML = '';
+            
+            const todayDate = new Date();
+            const startOffset = statOffsetDays; 
+            const endOffset = statOffsetDays + 6;
+            
+            const daysArr = [];
+            for (let i = endOffset; i >= startOffset; i--) {
+                const d = new Date(todayDate);
+                d.setDate(todayDate.getDate() - i);
+                daysArr.push(d);
+            }
+            
+            if (statOffsetDays === 0) {
+                document.getElementById('chartDateLabel').textContent = 'За последние 7 дней';
+                document.getElementById('btnChartNext').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                const d1 = daysArr[0].toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                const d2 = daysArr[6].toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                document.getElementById('chartDateLabel').textContent = `${d1} - ${d2}`;
+                document.getElementById('btnChartNext').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            let maxVal = 5;
+            const chartData = daysArr.map(date => {
+                const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                initDailyStatObj(dateString);
+                
+                const dataForMode = appData.dailyStats[dateString][currentStatMode][currentStatDir];
+                
+                if (dataForMode.score > maxVal) maxVal = dataForMode.score;
+                if (dataForMode.mistakes > maxVal) maxVal = dataForMode.mistakes;
+                
+                return { date, score: dataForMode.score, mistakes: dataForMode.mistakes };
+            });
+            
+            chartData.forEach(data => {
+                const col = document.createElement('div');
+                col.className = 'flex flex-col items-center flex-1 justify-end h-full group relative cursor-default mx-0.5 sm:mx-1';
+                
+                const scoreHeight = (data.score / maxVal) * 100;
+                const mistakesHeight = (data.mistakes / maxVal) * 100;
+                const dateLabel = data.date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                
+                col.innerHTML = `
+                    <div class="absolute -top-10 text-[10px] leading-tight font-bold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-200 px-2 py-1 rounded shadow-md z-10 pointer-events-none whitespace-nowrap text-center">
+                        <span class="text-green-600">Очки: ${data.score}</span><br>
+                        <span class="text-red-500">Ошибки: ${data.mistakes}</span>
+                    </div>
+                    <div class="w-full flex items-end justify-center gap-0.5 h-full relative">
+                        <div class="w-1/2 bg-green-100 rounded-t-sm relative overflow-hidden flex items-end justify-center" style="height: ${scoreHeight}%; min-height: 4px;">
+                            <div class="w-full bg-green-500 opacity-80 group-hover:opacity-100 h-full transition-opacity"></div>
+                        </div>
+                        <div class="w-1/2 bg-red-100 rounded-t-sm relative overflow-hidden flex items-end justify-center" style="height: ${mistakesHeight}%; min-height: 4px;">
+                            <div class="w-full bg-red-500 opacity-80 group-hover:opacity-100 h-full transition-opacity"></div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] sm:text-[10px] text-slate-500 mt-2 font-medium">${dateLabel}</div>
+                `;
+                chartContainer.appendChild(col);
+            });
+
+            const list = document.getElementById('mistakesList');
+            list.innerHTML = '';
+            
+            const mistakeWordsKeys = Object.keys(appData.mistakes);
+            if (mistakeWordsKeys.length === 0) {
+                list.innerHTML = '<li class="text-slate-400 italic py-2 text-center">Ошибок пока нет! Вы молодец! 🎉</li>';
+            } else {
+                const recentMistakes = [...mistakeWordsKeys].reverse().slice(0, 30);
+                recentMistakes.forEach(enWord => {
+                    const wordObj = words.find(w => w.en === enWord);
+                    if (wordObj) {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center p-2 rounded bg-white border border-slate-100 shadow-sm';
+                        li.innerHTML = `<span class="font-bold text-slate-700">${wordObj.en}</span> <span class="text-slate-500 text-right ml-2">${wordObj.ru}</span>`;
+                        list.appendChild(li);
+                    }
+                });
+            }
+        }
+
+        document.getElementById('btnShowStats').onclick = () => {
+            currentStatMode = appData.mode; 
+            currentStatDir = appData.direction;
+            statOffsetDays = 0; 
+            renderStats();
+            showScreen('stats');
+        };
+
+        document.getElementById('statToggleStudy').onclick = () => { currentStatMode = 'study'; renderStats(); };
+        document.getElementById('statToggleTime').onclick = () => { currentStatMode = 'time'; renderStats(); };
+        document.getElementById('statDirEnRu').onclick = () => { currentStatDir = 'en-ru'; renderStats(); };
+        document.getElementById('statDirRuEn').onclick = () => { currentStatDir = 'ru-en'; renderStats(); };
+
+        document.getElementById('btnChartPrev').onclick = () => {
+            statOffsetDays += 7;
+            renderStats();
+        };
+
+        document.getElementById('btnChartNext').onclick = () => {
+            if (statOffsetDays >= 7) {
+                statOffsetDays -= 7;
+                renderStats();
+            }
+        };
+
+        function updateMenuButtons() {
+            const btnClasses = {
+                active: 'menu-btn py-3 px-2 rounded-xl border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition text-sm sm:text-base',
+                inactive: 'menu-btn py-3 px-2 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-medium transition hover:bg-slate-50 text-sm sm:text-base'
+            };
+
+            document.getElementById('optDirEnRu').className = appData.direction === 'en-ru' ? btnClasses.active : btnClasses.inactive;
+            document.getElementById('optDirRuEn').className = appData.direction === 'ru-en' ? btnClasses.active : btnClasses.inactive;
+            
+            document.getElementById('optModeStudy').className = appData.mode === 'study' ? btnClasses.active : btnClasses.inactive;
+            document.getElementById('optModeTime').className = appData.mode === 'time' ? btnClasses.active : btnClasses.inactive;
+            
+            updateInGameScore();
+        }
+
+        document.getElementById('optDirEnRu').onclick = () => { appData.direction = 'en-ru'; saveSettings(); updateMenuButtons(); };
+        document.getElementById('optDirRuEn').onclick = () => { appData.direction = 'ru-en'; saveSettings(); updateMenuButtons(); };
+        document.getElementById('optModeStudy').onclick = () => { appData.mode = 'study'; saveSettings(); updateMenuButtons(); };
+        document.getElementById('optModeTime').onclick = () => { appData.mode = 'time'; saveSettings(); updateMenuButtons(); };
+
+        loadSettings();
+        showScreen('start');
+
+    </script>
+</body>
+</html>
